@@ -1,5 +1,5 @@
 /*
- * fd.c
+ * fd_list.c
  *
  * Copyright (c) 2014 Virtual Open Systems Sarl.
  *

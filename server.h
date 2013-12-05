@@ -15,10 +15,10 @@
 
 #include "common.h"
 #include "fd_list.h"
-#include "vapp.h"
+#include "vhost_user.h"
 
 struct ServerMsg {
-    VhostUserMsg msg;
+    struct VhostUserMsg msg;
     size_t fd_num;
     int fds[VHOST_MEMORY_MAX_NREGIONS];
 };
@@ -26,7 +26,6 @@ struct ServerMsg {
 typedef struct ServerMsg ServerMsg;
 
 struct ServerStruct {
-    char name[NAMELEN + 1];
     char path[PATH_MAX + 1];
     int status;
     int sock;
@@ -36,8 +35,10 @@ struct ServerStruct {
 
 typedef struct ServerStruct Server;
 
-Server* new_server(const char* name, const char* path);
+Server* new_server(const char* path);
 int set_handler_server(Server* server, AppHandlers* handlers);
-int run_server(Server* server);
+int init_server(Server* server);
+int loop_server(Server* server);
+int end_server(Server* server);
 
 #endif /* SERVER_H_ */

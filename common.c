@@ -1,5 +1,5 @@
 /*
- * vapp.c
+ * common.c
  *
  * Copyright (c) 2014 Virtual Open Systems Sarl.
  *
@@ -14,10 +14,11 @@
 #include <unistd.h>
 #include <sys/socket.h>
 
-#include "vapp.h"
+#include "common.h"
 #include "vring.h"
+#include "vhost_user.h"
 
-const char* cmd_from_vappmsg(const VhostUserMsg* msg)
+const char* cmd_from_vhostmsg(const VhostUserMsg* msg)
 {
     switch (msg->request) {
     case VHOST_USER_NONE:
@@ -59,10 +60,10 @@ const char* cmd_from_vappmsg(const VhostUserMsg* msg)
     return "UNDEFINED";
 }
 
-void dump_vappmsg(const VhostUserMsg* msg)
+void dump_vhostmsg(const VhostUserMsg* msg)
 {
     int i = 0;
-    fprintf(stdout, "Cmd: %s (0x%x)\n", cmd_from_vappmsg(msg), msg->request);
+    fprintf(stdout, "Cmd: %s (0x%x)\n", cmd_from_vhostmsg(msg), msg->request);
     fprintf(stdout, "Flags: 0x%x\n", msg->flags);
 
     // command specific `dumps`

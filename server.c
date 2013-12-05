@@ -20,7 +20,6 @@
 #include <sys/unistd.h>
 
 #include "server.h"
-#include "vapp.h"
 
 typedef enum {
     ServerSockInit,
@@ -30,22 +29,21 @@ typedef enum {
 
 } ServerSockStatus;
 
-extern int app_running;
+static int accept_sock_server(FdNode* node);
 
-Server* new_server(const char* name, const char* path)
+Server* new_server(const char* path)
 {
     Server* server = (Server*) calloc(1, sizeof(Server));
 
     //TODO: handle errors here
 
-    strncpy(server->name, name, NAMELEN);
-    strncpy(server->path, path ? path : VAPP_SOCK_NAME, PATH_MAX);
+    strncpy(server->path, path ? path : VHOST_SOCK_NAME, PATH_MAX);
     server->status = INSTANCE_CREATED;
 
     return server;
 }
 
-static int init_server(Server* server)
+int init_server(Server* server)
 {
     struct sockaddr_un un;
     size_t len;
@@ -80,19 +78,21 @@ static int init_server(Server* server)
 
     init_fd_list(&server->fd_list,FD_LIST_SELECT_5);
 
+    add_fd_list(&server->fd_list, FD_READ, server->sock, (void*) server,
+            accept_sock_server);
+
     server->status = INSTANCE_INITIALIZED;
 
     return 0;
 }
 
-static int end_server(Server* server)
+int end_server(Server* server)
 {
     if (server->status != INSTANCE_INITIALIZED)
         return 0;
 
     // Close and unlink the socket
     close(server->sock);
-    unlink(VAPP_SOCK_NAME);
 
     server->status = INSTANCE_END;
 
@@ -121,7 +121,7 @@ static int receive_sock_server(FdNode* node)
 
     if (status == ServerSockAccept) {
 #ifdef DUMP_PACKETS
-        dump_vappmsg(&msg.msg);
+        dump_vhostmsg(&msg.msg);
 #endif
         r = 0;
         // Handle the packet to the registered server backend
@@ -130,12 +130,12 @@ static int receive_sock_server(FdNode* node)
             r = server->handlers.in_handler(ctx, &msg);
             if ( r < 0) {
                 fprintf(stderr, "Error processing message: %s\n",
-                        cmd_from_vappmsg(&msg.msg));
+                        cmd_from_vhostmsg(&msg.msg));
                 status = ServerSockError;
             }
         } else {
             // ... or just dump it for debugging
-            dump_vappmsg(&msg.msg);
+            dump_vhostmsg(&msg.msg);
         }
 
         if (status == ServerSockAccept) {
@@ -173,19 +173,11 @@ static int accept_sock_server(FdNode* node)
     return status;
 }
 
-static int loop_server(Server* server)
+int loop_server(Server* server)
 {
-    add_fd_list(&server->fd_list, FD_READ, server->sock, (void*) server,
-            accept_sock_server);
-
-    // externally modified
-    app_running = 1;
-
-    while (app_running) {
-        traverse_fd_list(&server->fd_list);
-        if (server->handlers.poll_handler) {
-            server->handlers.poll_handler(server->handlers.context);
-        }
+    traverse_fd_list(&server->fd_list);
+    if (server->handlers.poll_handler) {
+        server->handlers.poll_handler(server->handlers.context);
     }
 
     return 0;
@@ -194,18 +186,6 @@ static int loop_server(Server* server)
 int set_handler_server(Server* server, AppHandlers* handlers)
 {
     memcpy(&server->handlers,handlers, sizeof(AppHandlers));
-
-    return 0;
-}
-
-int run_server(Server* server)
-{
-    if (init_server(server) != 0)
-        return -1;
-
-    loop_server(server);
-
-    end_server(server);
 
     return 0;
 }

@@ -19,6 +19,7 @@
 
 #include "vring.h"
 #include "shm.h"
+#include "vhost_user.h"
 
 #define VRING_IDX_NONE          ((uint16_t)-1)
 

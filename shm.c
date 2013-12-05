@@ -11,11 +11,12 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <sys/mman.h>
 
 #include "shm.h"
-#include "vapp.h"
+#include "vhost.h"
 
 int shm_fds[VHOST_MEMORY_MAX_NREGIONS];
 

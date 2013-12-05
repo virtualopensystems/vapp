@@ -11,7 +11,8 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
-#define NAMELEN     32
+#include <stddef.h>
+#include <stdint.h>
 
 #define INSTANCE_CREATED        1
 #define INSTANCE_INITIALIZED    2
@@ -22,7 +23,7 @@
 #define ETH_PACKET_SIZE         (1518)
 #define BUFFER_SIZE             ETH_PACKET_SIZE
 #define BUFFER_ALIGNMENT        (8)         // alignment in bytes
-#define VAPP_SOCK_NAME          "vapp.sock" // "/var/run/vapp.sock"
+#define VHOST_SOCK_NAME         "vhost.sock"
 
 // align a value on a boundary
 #define ALIGN(v,b)   (((long int)v + (long int)b - 1)&(-(long int)b))
@@ -43,5 +44,22 @@ struct AppHandlers {
     PollHandler poll_handler;
 };
 typedef struct AppHandlers AppHandlers;
+
+struct VhostUserMsg;
+
+const char* cmd_from_vhostmsg(const struct VhostUserMsg* msg);
+void dump_vhostmsg(const struct VhostUserMsg* msg);
+
+struct vring_desc;
+struct vring_avail;
+struct vring_used;
+struct vhost_vring;
+
+void dump_buffer(uint8_t* p, size_t len);
+void dump_vring(struct vring_desc* desc, struct vring_avail* avail,struct vring_used* used);
+void dump_vhost_vring(struct vhost_vring* vring);
+
+int vhost_user_send_fds(int fd, const struct VhostUserMsg *msg, int *fds, size_t fd_num);
+int vhost_user_recv_fds(int fd, const struct VhostUserMsg *msg, int *fds, size_t *fd_num);
 
 #endif /* COMMON_H_ */

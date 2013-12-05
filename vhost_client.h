@@ -1,5 +1,5 @@
 /*
- * vapp_client.h
+ * vhost_client.h
  *
  * Copyright (c) 2014 Virtual Open Systems Sarl.
  *
@@ -8,34 +8,33 @@
  *
  */
 
-#ifndef VAPP_CLIENT_H_
-#define VAPP_CLIENT_H_
+#ifndef VHOST_CLIENT_H_
+#define VHOST_CLIENT_H_
 
 #include "client.h"
 #include "stat.h"
 #include "vring.h"
+#include "vhost_user.h"
 
-struct VappClientStruct {
+typedef struct VhostClient {
     Client* client;
     VhostUserMemory memory;
     uint64_t features;           // features negotiated with the server
 
-    struct vhost_vring* vring_table_shm[VAPP_CLIENT_VRING_NUM];
+    struct vhost_vring* vring_table_shm[VHOST_CLIENT_VRING_NUM];
 
     VringTable vring_table;
     size_t  page_size;
 
     Stat stat;
-};
+} VhostClient;
 
-typedef struct VappClientStruct VappClient;
+VhostClient* new_vhost_client(const char* path);
 
-VappClient* new_vapp_client(const char* name, const char* path);
-
-int init_vapp_client(VappClient* vapp_client);
-int end_vapp_client(VappClient* vapp_client);
+int init_vhost_client(VhostClient* vhost_client);
+int end_vhost_client(VhostClient* vhost_client);
 
 // Test-only procedure
-int run_vapp_client(VappClient* vapp_client);
+int run_vhost_client(VhostClient* vhost_client);
 
-#endif /* VAPP_CLIENT_H_ */
+#endif /* VHOST_CLIENT_H_ */

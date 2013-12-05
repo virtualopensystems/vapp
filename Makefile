@@ -1,15 +1,15 @@
-SOURCES=main.c
-SOURCES+=shm.c fd_list.c stat.c vapp.c vring.c
-SOURCES+=server.c vapp_server.c
-SOURCES+=client.c vapp_client.c
+SOURCES=main.c common.c 
+SOURCES+=shm.c fd_list.c stat.c vring.c
+SOURCES+=server.c vhost_server.c
+SOURCES+=client.c vhost_client.c
 
 HEADERS=common.h
-HEADERS+=shm.h fd_list.h stat.h vapp.h vring.h
-HEADERS+=server.h vapp_server.h
-HEADERS+=client.h vapp_client.h
+HEADERS+=shm.h fd_list.h stat.h vring.h
+HEADERS+=server.h vhost_server.h
+HEADERS+=client.h vhost_client.h
 HEADERS+=packet.h
 
-BIN=vapp
+BIN=vhost
 CFLAGS += -Wall -Werror
 CFLAGS += -ggdb3 -O0
 LFLAGS = -lrt

@@ -13,8 +13,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "vapp_client.h"
-#include "vapp_server.h"
+#include "vhost_client.h"
+#include "vhost_server.h"
 
 static struct sigaction sigact;
 int app_running = 0;
@@ -27,8 +27,8 @@ int main(int argc, char* argv[])
 {
     int opt = 0;
 
-    VappClient *vapp_client = 0;
-    VappServer *server = 0;
+    VhostClient *vhost_client = 0;
+    VhostServer *vhost_server = 0;
 
     atexit(cleanup);
     init_signals();
@@ -37,25 +37,26 @@ int main(int argc, char* argv[])
 
         switch (opt) {
         case 'q':
-            vapp_client = new_vapp_client("qemu", /*optarg*/NULL );
+            vhost_client = new_vhost_client(/*optarg*/NULL );
             break;
         case 's':
-            server = new_vapp_server("switch", optarg);
+            vhost_server = new_vhost_server(optarg);
             break;
         default:
             break;
         }
 
-        if (vapp_client || server)
+        if (vhost_client || vhost_server)
             break;
     }
 
-    if (server) {
-        run_vapp_server(server);
-        free(server);
-    } else if (vapp_client) {
-        run_vapp_client(vapp_client);
-        free(vapp_client);
+    if (vhost_server) {
+        run_vhost_server(vhost_server);
+        end_vhost_server(vhost_server);
+        free(vhost_server);
+    } else if (vhost_client) {
+        run_vhost_client(vhost_client);
+        free(vhost_client);
     } else {
         fprintf(stderr, "Usage: %s [-q path | -s path]\n", argv[0]);
         exit(EXIT_FAILURE);

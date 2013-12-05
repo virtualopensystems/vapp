@@ -75,14 +75,16 @@ typedef struct {
   struct vring_used* used;
 } Vring;
 
+struct VhostUserMemory;
+
 // TODO: these are NET specific
-#define VAPP_CLIENT_VRING_IDX_RX    0
-#define VAPP_CLIENT_VRING_IDX_TX    1
-#define VAPP_CLIENT_VRING_NUM       2
+#define VHOST_CLIENT_VRING_IDX_RX   0
+#define VHOST_CLIENT_VRING_IDX_TX   1
+#define VHOST_CLIENT_VRING_NUM      2
 
 
 int vring_table_from_memory_region(struct vhost_vring* vring_table[], size_t vring_table_num,
-        VhostUserMemory *memory);
+        struct VhostUserMemory *memory);
 
 int set_host_vring(Client* client, struct vhost_vring *vring, int index);
 
@@ -99,7 +101,7 @@ typedef struct {
 
     ProcessHandler handler;
 
-    Vring vring[VAPP_CLIENT_VRING_NUM];
+    Vring vring[VHOST_CLIENT_VRING_NUM];
 } VringTable;
 
 int put_vring(VringTable* vring_table, uint32_t v_idx, void* buf, size_t size);
