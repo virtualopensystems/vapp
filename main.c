@@ -33,11 +33,11 @@ int main(int argc, char* argv[])
     atexit(cleanup);
     init_signals();
 
-    while ((opt = getopt(argc, argv, "qs:")) != -1) {
+    while ((opt = getopt(argc, argv, "q:s:")) != -1) {
 
         switch (opt) {
         case 'q':
-            vhost_client = new_vhost_client(/*optarg*/NULL );
+            vhost_client = new_vhost_client(optarg);
             break;
         case 's':
             vhost_server = new_vhost_server(optarg);
