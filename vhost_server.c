@@ -187,6 +187,13 @@ static int _set_log_fd(VhostServer* vhost_server, ServerMsg* msg)
 static int _set_vring_num(VhostServer* vhost_server, ServerMsg* msg)
 {
     fprintf(stdout, "%s\n", __FUNCTION__);
+
+    int idx = msg->msg.state.index;
+
+    assert(idx<VHOST_CLIENT_VRING_NUM);
+
+    vhost_server->vring_table.vring[idx].num = msg->msg.state.num;
+
     return 0;
 }
 

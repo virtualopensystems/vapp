@@ -129,6 +129,7 @@ int put_vring(VringTable* vring_table, uint32_t v_idx, void* buf, size_t size)
 {
     struct vring_desc* desc = vring_table->vring[v_idx].desc;
     struct vring_avail* avail = vring_table->vring[v_idx].avail;
+    unsigned int num = vring_table->vring[v_idx].num;
     ProcessHandler* handler = &vring_table->handler;
 
     uint16_t f_idx = vring_table->free_head;
@@ -165,7 +166,7 @@ int put_vring(VringTable* vring_table, uint32_t v_idx, void* buf, size_t size)
     avail->ring[avail->idx] = f_idx;
 
     // move/warp avail.idx to next
-    avail->idx = (avail->idx+1)%VHOST_VRING_SIZE;
+    avail->idx = (avail->idx+1)%num;
 
     sync_shm(dest_buf, size);
     sync_shm((void*)&(avail), sizeof(struct vring_avail));
@@ -192,9 +193,10 @@ static int free_vring(VringTable* vring_table, uint32_t v_idx, uint32_t d_idx)
 int process_used_vring(VringTable* vring_table, uint32_t v_idx)
 {
     struct vring_used* used = vring_table->vring[v_idx].used;
+    unsigned int num = vring_table->vring[v_idx].num;
     uint16_t u_idx = vring_table->used_head;
 
-    for (; u_idx != used->idx; u_idx = (u_idx + 1) % VHOST_VRING_SIZE) {
+    for (; u_idx != used->idx; u_idx = (u_idx + 1) % num) {
         free_vring(vring_table, v_idx, used->ring[u_idx].id);
     }
 
@@ -208,6 +210,7 @@ static int process_desc(VringTable* vring_table, uint32_t v_idx, uint32_t a_idx)
     struct vring_desc* desc = vring_table->vring[v_idx].desc;
     struct vring_avail* avail = vring_table->vring[v_idx].avail;
     struct vring_used* used = vring_table->vring[v_idx].used;
+    unsigned int num = vring_table->vring[v_idx].num;
     ProcessHandler* handler = &vring_table->handler;
     uint16_t u_idx = vring_table->last_used_idx;
     uint16_t d_idx = avail->ring[a_idx];
@@ -244,7 +247,7 @@ static int process_desc(VringTable* vring_table, uint32_t v_idx, uint32_t a_idx)
         // add it to the used ring
         used->ring[u_idx].id = d_idx;
         used->ring[u_idx].len = cur_len;
-        u_idx = (u_idx + 1) % VHOST_VRING_SIZE;
+        u_idx = (u_idx + 1) % num;
 
         if (desc[d_idx].flags & VIRTIO_DESC_F_NEXT) {
             d_idx = desc[d_idx].next;
@@ -272,13 +275,14 @@ int process_avail_vring(VringTable* vring_table, uint32_t v_idx)
 {
     struct vring_avail* avail = vring_table->vring[v_idx].avail;
     struct vring_used* used = vring_table->vring[v_idx].used;
+    unsigned int num = vring_table->vring[v_idx].num;
 
     uint32_t count = 0;
     uint16_t a_idx = vring_table->last_avail_idx;
     uint16_t u_idx = vring_table->last_used_idx;
 
     // Loop all avail descriptors
-    for (; a_idx != avail->idx; a_idx = (a_idx + 1) % VHOST_VRING_SIZE) {
+    for (; a_idx != avail->idx; a_idx = (a_idx + 1) % num) {
         u_idx = process_desc(vring_table, v_idx, a_idx);
         count++;
     }

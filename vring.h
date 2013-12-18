@@ -73,6 +73,7 @@ typedef struct {
   struct vring_desc* desc;
   struct vring_avail* avail;
   struct vring_used* used;
+  unsigned int num;
 } Vring;
 
 struct VhostUserMemory;

@@ -98,6 +98,7 @@ int init_vhost_client(VhostClient* vhost_client)
         vhost_client->vring_table.vring[idx].desc = vhost_client->vring_table_shm[idx]->desc;
         vhost_client->vring_table.vring[idx].avail = &vhost_client->vring_table_shm[idx]->avail;
         vhost_client->vring_table.vring[idx].used = &vhost_client->vring_table_shm[idx]->used;
+        vhost_client->vring_table.vring[idx].num = VHOST_VRING_SIZE;
     }
 
     // Add handler for RX kickfd
