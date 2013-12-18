@@ -134,6 +134,8 @@ int put_vring(VringTable* vring_table, uint32_t v_idx, void* buf, size_t size)
 
     uint16_t f_idx = vring_table->free_head;
     void* dest_buf = 0;
+    struct virtio_net_hdr *hdr = 0;
+    size_t hdr_len = sizeof(struct virtio_net_hdr);
 
     if (f_idx == VRING_IDX_NONE) {
         //fprintf(stderr, "Vring is full - no room for new packes.\n");
@@ -155,10 +157,18 @@ int put_vring(VringTable* vring_table, uint32_t v_idx, void* buf, size_t size)
         dest_buf = (void*)desc[f_idx].addr;
     }
 
+    // set the header to all 0
+    hdr = dest_buf;
+    hdr->flags = 0;
+    hdr->gso_type = 0;
+    hdr->hdr_len = 0;
+    hdr->gso_size = 0;
+    hdr->csum_start = 0;
+    hdr->csum_offset = 0;
 
     // We support only single buffer per packet
-    memcpy(dest_buf,buf,size);
-    desc[f_idx].len = size;
+    memcpy(dest_buf + hdr_len, buf, size);
+    desc[f_idx].len = hdr_len + size;
     desc[f_idx].flags = 0;
     desc[f_idx].next = VRING_IDX_NONE;
 
@@ -217,6 +227,8 @@ static int process_desc(VringTable* vring_table, uint32_t v_idx, uint32_t a_idx)
     uint32_t len = 0;
     size_t buf_size = ETH_PACKET_SIZE;
     uint8_t buf[buf_size];
+    struct virtio_net_hdr *hdr = 0;
+    size_t hdr_len = sizeof(struct virtio_net_hdr);
 
 #ifdef DUMP_PACKETS
     fprintf(stdout, "chunks: ");
@@ -260,9 +272,18 @@ static int process_desc(VringTable* vring_table, uint32_t v_idx, uint32_t a_idx)
     fprintf(stdout, "\n");
 #endif
 
+    // check the header
+    hdr = (struct virtio_net_hdr *)buf;
+
+    if ((hdr->flags != 0) || (hdr->gso_type != 0) || (hdr->hdr_len != 0)
+         || (hdr->gso_size != 0) || (hdr->csum_start != 0)
+         || (hdr->csum_offset != 0)) {
+        fprintf(stderr, "wrong flags\n");
+    }
+
     // consume the packet
     if (handler && handler->avail_handler) {
-        if (handler->avail_handler(handler->context, buf, len) != 0) {
+        if (handler->avail_handler(handler->context, buf + hdr_len, len - hdr_len) != 0) {
             // error handling current packet
             // TODO: we basically drop it here
         }

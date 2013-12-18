@@ -328,7 +328,7 @@ static int _set_vring_call(VhostServer* vhost_server, ServerMsg* msg)
     int idx = msg->msg.file.index;
 
     assert(idx<VHOST_CLIENT_VRING_NUM);
-    assert(msg->fd_num == 1);
+    assert(msg->fd_num >= 0);
 
     vhost_server->vring_table.vring[idx].callfd = msg->fds[0];
 

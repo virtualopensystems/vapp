@@ -21,7 +21,7 @@
 #define ONEMEG                  (1024*1024)
 
 #define ETH_PACKET_SIZE         (1518)
-#define BUFFER_SIZE             ETH_PACKET_SIZE
+#define BUFFER_SIZE             (sizeof(struct virtio_net_hdr) + ETH_PACKET_SIZE)
 #define BUFFER_ALIGNMENT        (8)         // alignment in bytes
 #define VHOST_SOCK_NAME         "vhost.sock"
 
