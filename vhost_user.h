@@ -23,6 +23,7 @@ typedef struct VhostUserMemoryRegion {
 
 typedef struct VhostUserMemory {
     uint32_t nregions;
+    uint32_t padding;
     VhostUserMemoryRegion regions[VHOST_MEMORY_MAX_NREGIONS];
 } VhostUserMemory;
 
@@ -43,22 +44,33 @@ typedef enum VhostUserRequest {
     VHOST_USER_SET_VRING_CALL = 13,
     VHOST_USER_SET_VRING_ERR = 14,
     VHOST_USER_NET_SET_BACKEND = 15,
+    VHOST_USER_ECHO = 16,
     VHOST_USER_MAX
 } VhostUserRequest;
 
 typedef struct VhostUserMsg {
     VhostUserRequest request;
 
-    int flags;
+    #define VHOST_USER_VERSION_MASK     (0x3)
+    #define VHOST_USER_REPLY_MASK       (0x1<<2)
+    uint32_t flags;
+    uint32_t size; /* payload size */
     union {
         uint64_t    u64;
         int         fd;
         struct vhost_vring_state state;
         struct vhost_vring_addr addr;
         struct vhost_vring_file file;
-
         VhostUserMemory memory;
     };
-} VhostUserMsg;
+}  __attribute__((packed)) VhostUserMsg;
+
+#define MEMB_SIZE(t,m)      (sizeof(((t*)0)->m))
+#define VHOST_USER_HDR_SIZE (MEMB_SIZE(VhostUserMsg,request) \
+                            + MEMB_SIZE(VhostUserMsg,flags) \
+                            + MEMB_SIZE(VhostUserMsg,size))
+
+/* The version of the protocol we support */
+#define VHOST_USER_VERSION    (0x1)
 
 #endif /* VHOST_USER_H_ */

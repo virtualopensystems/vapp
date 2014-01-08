@@ -53,6 +53,8 @@ const char* cmd_from_vhostmsg(const VhostUserMsg* msg)
         return "VHOST_USER_SET_VRING_ERR";
     case VHOST_USER_NET_SET_BACKEND:
         return "VHOST_USER_NET_SET_BACKEND";
+    case VHOST_USER_ECHO:
+        return "VHOST_USER_ECHO";
     case VHOST_USER_MAX:
         return "VHOST_USER_MAX";
     }
@@ -125,6 +127,7 @@ void dump_vhostmsg(const VhostUserMsg* msg)
         fprintf(stdout, "file: %d 0x%x\n", msg->file.index, msg->file.fd);
         break;
     case VHOST_USER_NONE:
+    case VHOST_USER_ECHO:
     case VHOST_USER_MAX:
         break;
     }
@@ -189,7 +192,7 @@ int vhost_user_send_fds(int fd, const VhostUserMsg *msg, int *fds,
 
     /* set the payload */
     iov[0].iov_base = (void *) msg;
-    iov[0].iov_len = sizeof(VhostUserMsg);
+    iov[0].iov_len = VHOST_USER_HDR_SIZE + msg->size;
 
     msgh.msg_iov = iov;
     msgh.msg_iovlen = 1;
@@ -238,7 +241,7 @@ int vhost_user_recv_fds(int fd, const VhostUserMsg *msg, int *fds,
 
     /* set the payload */
     iov[0].iov_base = (void *) msg;
-    iov[0].iov_len = sizeof(VhostUserMsg);
+    iov[0].iov_len = VHOST_USER_HDR_SIZE;
 
     msgh.msg_iov = iov;
     msgh.msg_iovlen = 1;
@@ -265,6 +268,8 @@ int vhost_user_recv_fds(int fd, const VhostUserMsg *msg, int *fds,
 
     if (ret < 0) {
         fprintf(stderr, "Failed recvmsg, reason: %s\n", strerror(errno));
+    } else {
+        read(fd, ((char*)msg) + ret, msg->size);
     }
 
     return ret;

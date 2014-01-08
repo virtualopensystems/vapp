@@ -141,6 +141,10 @@ static int receive_sock_server(FdNode* node)
         if (status == ServerSockAccept) {
             // in_handler will tell us if we need to reply
             if (r > 0) {
+                /* Set the version in the flags when sending the reply */
+                msg.msg.flags &= ~VHOST_USER_VERSION_MASK;
+                msg.msg.flags |= VHOST_USER_VERSION;
+                msg.msg.flags |= VHOST_USER_REPLY_MASK;
                 if (vhost_user_send_fds(sock, &msg.msg, 0, 0) < 0) {
                     perror("send");
                     status = ServerSockError;
