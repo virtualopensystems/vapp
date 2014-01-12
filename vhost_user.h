@@ -57,10 +57,8 @@ typedef struct VhostUserMsg {
     uint32_t size; /* payload size */
     union {
         uint64_t    u64;
-        int         fd;
         struct vhost_vring_state state;
         struct vhost_vring_addr addr;
-        struct vhost_vring_file file;
         VhostUserMemory memory;
     };
 }  __attribute__((packed)) VhostUserMsg;

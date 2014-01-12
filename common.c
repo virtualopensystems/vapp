@@ -94,7 +94,6 @@ void dump_vhostmsg(const VhostUserMsg* msg)
         fprintf(stdout, "u64: 0x%lx\n", msg->u64);
         break;
     case VHOST_USER_SET_LOG_FD:
-        fprintf(stdout, "fd: 0x%x\n", msg->fd);
         break;
     case VHOST_USER_SET_VRING_NUM:
         fprintf(stdout, "state: %d %d\n", msg->state.index, msg->state.num);
@@ -115,16 +114,10 @@ void dump_vhostmsg(const VhostUserMsg* msg)
         fprintf(stdout, "state: %d %d\n", msg->state.index, msg->state.num);
         break;
     case VHOST_USER_SET_VRING_KICK:
-        fprintf(stdout, "file: %d 0x%x\n", msg->file.index, msg->file.fd);
-        break;
     case VHOST_USER_SET_VRING_CALL:
-        fprintf(stdout, "file: %d 0x%x\n", msg->file.index, msg->file.fd);
-        break;
     case VHOST_USER_SET_VRING_ERR:
-        fprintf(stdout, "file: %d 0x%x\n", msg->file.index, msg->file.fd);
-        break;
     case VHOST_USER_NET_SET_BACKEND:
-        fprintf(stdout, "file: %d 0x%x\n", msg->file.index, msg->file.fd);
+        fprintf(stdout, "u64: 0x%lx\n", msg->u64);
         break;
     case VHOST_USER_NONE:
     case VHOST_USER_ECHO:

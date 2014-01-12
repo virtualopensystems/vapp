@@ -89,6 +89,7 @@ int vhost_ioctl(Client* client, VhostUserRequest request, ...)
     va_list ap;
 
     VhostUserMsg msg;
+    struct vhost_vring_file *file = 0;
     int need_reply = 0;
     int fds[VHOST_MEMORY_MAX_NREGIONS];
     size_t fd_num = 0;
@@ -129,9 +130,7 @@ int vhost_ioctl(Client* client, VhostUserRequest request, ...)
         break;
 
     case VHOST_USER_SET_LOG_FD:
-        msg.fd = *((int*) arg);
-        fds[fd_num++] = msg.fd;
-        msg.size = MEMB_SIZE(VhostUserMsg,fd);
+        fds[fd_num++] = *((int*) arg);
         break;
 
     case VHOST_USER_SET_VRING_NUM:
@@ -149,9 +148,12 @@ int vhost_ioctl(Client* client, VhostUserRequest request, ...)
     case VHOST_USER_SET_VRING_CALL:
     case VHOST_USER_SET_VRING_ERR:
     case VHOST_USER_NET_SET_BACKEND:
-        memcpy(&msg.file, arg, MEMB_SIZE(VhostUserMsg,file));
-        fds[fd_num++] = msg.file.fd;
-        msg.size = MEMB_SIZE(VhostUserMsg,file);
+        file = arg;
+        msg.u64 = file->index;
+        msg.size = MEMB_SIZE(VhostUserMsg,u64);
+        if (file->fd > 0) {
+            fds[fd_num++] = file->fd;
+        }
         break;
 
     case VHOST_USER_NONE:

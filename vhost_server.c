@@ -304,7 +304,7 @@ static int _set_vring_kick(VhostServer* vhost_server, ServerMsg* msg)
 {
     fprintf(stdout, "%s\n", __FUNCTION__);
 
-    int idx = msg->msg.file.index;
+    int idx = msg->msg.u64;
 
     assert(idx<VHOST_CLIENT_VRING_NUM);
     assert(msg->fd_num == 1);
@@ -327,7 +327,7 @@ static int _set_vring_call(VhostServer* vhost_server, ServerMsg* msg)
 {
     fprintf(stdout, "%s\n", __FUNCTION__);
 
-    int idx = msg->msg.file.index;
+    int idx = msg->msg.u64;
 
     assert(idx<VHOST_CLIENT_VRING_NUM);
     assert(msg->fd_num >= 0);
