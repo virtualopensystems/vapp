@@ -147,7 +147,6 @@ int vhost_ioctl(Client* client, VhostUserRequest request, ...)
     case VHOST_USER_SET_VRING_KICK:
     case VHOST_USER_SET_VRING_CALL:
     case VHOST_USER_SET_VRING_ERR:
-    case VHOST_USER_NET_SET_BACKEND:
         file = arg;
         msg.u64 = file->index;
         msg.size = MEMB_SIZE(VhostUserMsg,u64);

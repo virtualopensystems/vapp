@@ -37,7 +37,7 @@ typedef struct ServerStruct Server;
 
 Server* new_server(const char* path);
 int set_handler_server(Server* server, AppHandlers* handlers);
-int init_server(Server* server);
+int init_server(Server* server, int is_listen);
 int loop_server(Server* server);
 int end_server(Server* server);
 

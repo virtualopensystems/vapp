@@ -27,38 +27,44 @@ int main(int argc, char* argv[])
 {
     int opt = 0;
 
-    VhostClient *vhost_client = 0;
-    VhostServer *vhost_server = 0;
+    VhostClient *vhost_master = 0;
+    VhostServer *vhost_slave = 0;
 
     atexit(cleanup);
     init_signals();
 
-    while ((opt = getopt(argc, argv, "q:s:")) != -1) {
+    while ((opt = getopt(argc, argv, "q:s:c:")) != -1) {
 
         switch (opt) {
         case 'q':
-            vhost_client = new_vhost_client(optarg);
+            vhost_master = new_vhost_client(optarg);
             break;
         case 's':
-            vhost_server = new_vhost_server(optarg);
+            vhost_slave = new_vhost_server(optarg, 1 /*is_listen*/);
+            break;
+        case 'c':
+            vhost_slave = new_vhost_server(optarg, 0 /*is_listen*/);
             break;
         default:
             break;
         }
 
-        if (vhost_client || vhost_server)
+        if (vhost_master || vhost_slave)
             break;
     }
 
-    if (vhost_server) {
-        run_vhost_server(vhost_server);
-        end_vhost_server(vhost_server);
-        free(vhost_server);
-    } else if (vhost_client) {
-        run_vhost_client(vhost_client);
-        free(vhost_client);
+    if (vhost_slave) {
+        run_vhost_server(vhost_slave);
+        end_vhost_server(vhost_slave);
+        free(vhost_slave);
+    } else if (vhost_master) {
+        run_vhost_client(vhost_master);
+        free(vhost_master);
     } else {
-        fprintf(stderr, "Usage: %s [-q path | -s path]\n", argv[0]);
+        fprintf(stderr, "Usage: %s [-q path | -s path | -c path]\n", argv[0]);
+        fprintf(stderr, "\t-q - act as master\n");
+        fprintf(stderr, "\t-s - act as slave server\n");
+        fprintf(stderr, "\t-c - act as slave client\n");
         exit(EXIT_FAILURE);
     }
 

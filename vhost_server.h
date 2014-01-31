@@ -38,7 +38,7 @@ typedef struct VhostServer {
     unsigned int vring_base[VHOST_CLIENT_VRING_NUM];
 } VhostServer;
 
-VhostServer* new_vhost_server(const char* path);
+VhostServer* new_vhost_server(const char* path, int is_listen);
 int end_vhost_server(VhostServer* vhost_server);
 int run_vhost_server(VhostServer* vhost_server);
 

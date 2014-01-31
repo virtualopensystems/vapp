@@ -26,7 +26,7 @@ static uint64_t map_handler(void* context, uint64_t addr);
 
 extern int app_running;
 
-VhostServer* new_vhost_server(const char* path)
+VhostServer* new_vhost_server(const char* path, int is_listen)
 {
     VhostServer* vhost_server = (VhostServer*) calloc(1, sizeof(VhostServer));
     int idx;
@@ -34,7 +34,7 @@ VhostServer* new_vhost_server(const char* path)
     //TODO: handle errors here
 
     vhost_server->server = new_server(path);
-    init_server(vhost_server->server);
+    init_server(vhost_server->server, is_listen);
 
     vhost_server->memory.nregions = 0;
 
@@ -345,13 +345,6 @@ static int _set_vring_err(VhostServer* vhost_server, ServerMsg* msg)
     return 0;
 }
 
-static int _echo(VhostServer* vhost_server, ServerMsg* msg)
-{
-    fprintf(stdout, "%s\n", __FUNCTION__);
-
-    return 1; // echo back
-}
-
 static MsgHandler msg_handlers[VHOST_USER_MAX] = {
         0,                  // VHOST_USER_NONE
         _get_features,      // VHOST_USER_GET_FEATURES
@@ -368,8 +361,6 @@ static MsgHandler msg_handlers[VHOST_USER_MAX] = {
         _set_vring_kick,    // VHOST_USER_SET_VRING_KICK
         _set_vring_call,    // VHOST_USER_SET_VRING_CALL
         _set_vring_err,     // VHOST_USER_SET_VRING_ERR
-        0,                  // VHOST_USER_NET_SET_BACKEND
-        _echo,              // VHOST_USER_ECHO
         };
 
 static int in_msg_server(void* context, ServerMsg* msg)

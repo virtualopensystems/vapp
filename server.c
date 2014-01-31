@@ -29,6 +29,7 @@ typedef enum {
 
 } ServerSockStatus;
 
+static int receive_sock_server(FdNode* node);
 static int accept_sock_server(FdNode* node);
 
 Server* new_server(const char* path)
@@ -43,15 +44,13 @@ Server* new_server(const char* path)
     return server;
 }
 
-int init_server(Server* server)
+int init_server(Server* server, int is_listen)
 {
     struct sockaddr_un un;
     size_t len;
 
     if (server->status != INSTANCE_CREATED)
         return 0;
-
-    unlink(server->path); // remove if exists
 
     // Create the socket
     if ((server->sock = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
@@ -64,22 +63,32 @@ int init_server(Server* server)
 
     len = sizeof(un.sun_family) + strlen(server->path);
 
-    // Bind
-    if (bind(server->sock, (struct sockaddr *) &un, len) == -1) {
-        perror("bind");
-        return -1;
-    }
+    if (is_listen) {
+        unlink(server->path); // remove if exists
 
-    // Listen
-    if (listen(server->sock, 1) == -1) {
-        perror("listen");
-        return -1;
+        // Bind
+        if (bind(server->sock, (struct sockaddr *) &un, len) == -1) {
+            perror("bind");
+            return -1;
+        }
+
+        // Listen
+        if (listen(server->sock, 1) == -1) {
+            perror("listen");
+            return -1;
+        }
+    } else {
+
+        if (connect(server->sock, (struct sockaddr *) &un, len) == -1) {
+            perror("connect");
+            return -1;
+        }
     }
 
     init_fd_list(&server->fd_list,FD_LIST_SELECT_5);
 
     add_fd_list(&server->fd_list, FD_READ, server->sock, (void*) server,
-            accept_sock_server);
+            is_listen?accept_sock_server:receive_sock_server);
 
     server->status = INSTANCE_INITIALIZED;
 
