@@ -35,7 +35,6 @@ typedef struct VhostServer {
     uint8_t buffer[BUFFER_SIZE];
     uint32_t buffer_size;
     Stat stat;
-    unsigned int vring_base[VHOST_CLIENT_VRING_NUM];
 } VhostServer;
 
 VhostServer* new_vhost_server(const char* path, int is_listen);

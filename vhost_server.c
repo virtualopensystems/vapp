@@ -39,11 +39,6 @@ VhostServer* new_vhost_server(const char* path, int is_listen)
     vhost_server->memory.nregions = 0;
 
     // VringTable initalization
-    vhost_server->vring_table.free_head = 0;
-    vhost_server->vring_table.used_head = 0;
-
-    vhost_server->vring_table.last_avail_idx = 0;
-    vhost_server->vring_table.last_used_idx = 0;
     vhost_server->vring_table.handler.context = (void*) vhost_server;
     vhost_server->vring_table.handler.avail_handler = avail_handler_server;
     vhost_server->vring_table.handler.map_handler = map_handler;
@@ -54,6 +49,9 @@ VhostServer* new_vhost_server(const char* path, int is_listen)
         vhost_server->vring_table.vring[idx].desc = 0;
         vhost_server->vring_table.vring[idx].avail = 0;
         vhost_server->vring_table.vring[idx].used = 0;
+        vhost_server->vring_table.vring[idx].num = 0;
+        vhost_server->vring_table.vring[idx].last_avail_idx = 0;
+        vhost_server->vring_table.vring[idx].last_used_idx = 0;
     }
 
     init_stat(&vhost_server->stat);
@@ -215,6 +213,10 @@ static int _set_vring_addr(VhostServer* vhost_server, ServerMsg* msg)
     vhost_server->vring_table.vring[idx].used =
             (struct vring_used*) _map_user_addr(vhost_server,
                     msg->msg.addr.used_user_addr);
+
+    vhost_server->vring_table.vring[idx].last_used_idx =
+            vhost_server->vring_table.vring[idx].used->idx;
+
     return 0;
 }
 
@@ -226,7 +228,7 @@ static int _set_vring_base(VhostServer* vhost_server, ServerMsg* msg)
 
     assert(idx<VHOST_CLIENT_VRING_NUM);
 
-    vhost_server->vring_base[idx] = msg->msg.state.num;
+    vhost_server->vring_table.vring[idx].last_avail_idx = msg->msg.state.num;
 
     return 0;
 }
@@ -239,7 +241,7 @@ static int _get_vring_base(VhostServer* vhost_server, ServerMsg* msg)
 
     assert(idx<VHOST_CLIENT_VRING_NUM);
 
-    msg->msg.state.num = vhost_server->vring_base[idx];
+    msg->msg.state.num = vhost_server->vring_table.vring[idx].last_avail_idx;
     msg->msg.size = MEMB_SIZE(VhostUserMsg,state);
 
     return 1; // should reply back

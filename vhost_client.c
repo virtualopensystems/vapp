@@ -83,11 +83,6 @@ int init_vhost_client(VhostClient* vhost_client)
     }
 
     // VringTable initalization
-    vhost_client->vring_table.free_head = 0;
-    vhost_client->vring_table.used_head = 0;
-
-    vhost_client->vring_table.last_avail_idx = 0;
-    vhost_client->vring_table.last_used_idx = 0;
     vhost_client->vring_table.handler.context = (void*) vhost_client;
     vhost_client->vring_table.handler.avail_handler = avail_handler_client;
     vhost_client->vring_table.handler.map_handler = 0;
@@ -99,6 +94,8 @@ int init_vhost_client(VhostClient* vhost_client)
         vhost_client->vring_table.vring[idx].avail = &vhost_client->vring_table_shm[idx]->avail;
         vhost_client->vring_table.vring[idx].used = &vhost_client->vring_table_shm[idx]->used;
         vhost_client->vring_table.vring[idx].num = VHOST_VRING_SIZE;
+        vhost_client->vring_table.vring[idx].last_avail_idx = 0;
+        vhost_client->vring_table.vring[idx].last_used_idx = 0;
     }
 
     // Add handler for RX kickfd
