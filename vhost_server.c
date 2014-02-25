@@ -54,6 +54,8 @@ VhostServer* new_vhost_server(const char* path, int is_listen)
         vhost_server->vring_table.vring[idx].last_used_idx = 0;
     }
 
+    vhost_server->buffer_size = 0;
+    vhost_server->is_polling = 0;
     init_stat(&vhost_server->stat);
 
     return vhost_server;
@@ -269,6 +271,23 @@ static uintptr_t map_handler(void* context, uint64_t addr)
     return _map_guest_addr(vhost_server, addr);
 }
 
+static int _poll_avail_vring(VhostServer* vhost_server, int idx)
+{
+    uint32_t count = 0;
+
+    // if vring is already set, process the vring
+    if (vhost_server->vring_table.vring[idx].desc) {
+        count = process_avail_vring(&vhost_server->vring_table, idx);
+#ifndef DUMP_PACKETS
+
+        update_stat(&vhost_server->stat, count);
+        print_stat(&vhost_server->stat);
+#endif
+    }
+
+    return count;
+}
+
 static int _kick_server(FdNode* node)
 {
     VhostServer* vhost_server = (VhostServer*) node->context;
@@ -284,20 +303,10 @@ static int _kick_server(FdNode* node)
         fprintf(stdout, "Kick fd closed\n");
         del_fd_list(&vhost_server->server->fd_list, FD_READ, kickfd);
     } else {
-        int idx = VHOST_CLIENT_VRING_IDX_TX;
 #if 0
         fprintf(stdout, "Got kick %"PRId64"\n", kick_it);
 #endif
-        // if vring is already set, process the vring
-        if (vhost_server->vring_table.vring[idx].desc) {
-            uint32_t count = process_avail_vring(&vhost_server->vring_table, idx);
-#ifdef DUMP_PACKETS
-            (void)count;
-#else
-            update_stat(&vhost_server->stat, count);
-            print_stat(&vhost_server->stat);
-#endif
-        }
+        _poll_avail_vring(vhost_server, VHOST_CLIENT_VRING_IDX_TX);
     }
 
     return 0;
@@ -307,20 +316,27 @@ static int _set_vring_kick(VhostServer* vhost_server, ServerMsg* msg)
 {
     fprintf(stdout, "%s\n", __FUNCTION__);
 
-    int idx = msg->msg.u64;
+    int idx = msg->msg.u64 & VHOST_USER_VRING_IDX_MASK;
+    int validfd = (msg->msg.u64 & VHOST_USER_VRING_NOFD_MASK) == 0;
 
     assert(idx<VHOST_CLIENT_VRING_NUM);
-    assert(msg->fd_num == 1);
+    if (validfd) {
+        assert(msg->fd_num == 1);
 
-    vhost_server->vring_table.vring[idx].kickfd = msg->fds[0];
+        vhost_server->vring_table.vring[idx].kickfd = msg->fds[0];
 
-    fprintf(stdout, "Got kickfd 0x%x\n", vhost_server->vring_table.vring[idx].kickfd);
+        fprintf(stdout, "Got kickfd 0x%x\n", vhost_server->vring_table.vring[idx].kickfd);
 
-    if (idx == VHOST_CLIENT_VRING_IDX_TX) {
-        add_fd_list(&vhost_server->server->fd_list, FD_READ,
-                vhost_server->vring_table.vring[idx].kickfd,
-                (void*) vhost_server, _kick_server);
-        fprintf(stdout, "Listening for kicks on 0x%x\n", vhost_server->vring_table.vring[idx].kickfd);
+        if (idx == VHOST_CLIENT_VRING_IDX_TX) {
+            add_fd_list(&vhost_server->server->fd_list, FD_READ,
+                    vhost_server->vring_table.vring[idx].kickfd,
+                    (void*) vhost_server, _kick_server);
+            fprintf(stdout, "Listening for kicks on 0x%x\n", vhost_server->vring_table.vring[idx].kickfd);
+        }
+        vhost_server->is_polling = 0;
+    } else {
+        fprintf(stdout, "Got empty kickfd. Start polling.\n");
+        vhost_server->is_polling = 1;
     }
 
     return 0;
@@ -330,14 +346,17 @@ static int _set_vring_call(VhostServer* vhost_server, ServerMsg* msg)
 {
     fprintf(stdout, "%s\n", __FUNCTION__);
 
-    int idx = msg->msg.u64;
+    int idx = msg->msg.u64 & VHOST_USER_VRING_IDX_MASK;
+    int validfd = (msg->msg.u64 & VHOST_USER_VRING_NOFD_MASK) == 0;
 
     assert(idx<VHOST_CLIENT_VRING_NUM);
-    assert(msg->fd_num >= 0);
+    if (validfd) {
+        assert(msg->fd_num == 1);
 
-    vhost_server->vring_table.vring[idx].callfd = msg->fds[0];
+        vhost_server->vring_table.vring[idx].callfd = msg->fds[0];
 
-    fprintf(stdout, "Got callfd 0x%x\n", vhost_server->vring_table.vring[idx].callfd);
+        fprintf(stdout, "Got callfd 0x%x\n", vhost_server->vring_table.vring[idx].callfd);
+    }
 
     return 0;
 }
@@ -385,9 +404,16 @@ static int in_msg_server(void* context, ServerMsg* msg)
 static int poll_server(void* context)
 {
     VhostServer* vhost_server = (VhostServer*) context;
+    int tx_idx = VHOST_CLIENT_VRING_IDX_TX;
     int rx_idx = VHOST_CLIENT_VRING_IDX_RX;
 
     if (vhost_server->vring_table.vring[rx_idx].desc) {
+        // process TX ring
+        if (vhost_server->is_polling) {
+            _poll_avail_vring(vhost_server, tx_idx);
+        }
+
+        // process RX ring
         if (vhost_server->buffer_size) {
             // send a packet from the buffer
             put_vring(&vhost_server->vring_table, rx_idx,

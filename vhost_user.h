@@ -49,11 +49,13 @@ typedef enum VhostUserRequest {
 typedef struct VhostUserMsg {
     VhostUserRequest request;
 
-    #define VHOST_USER_VERSION_MASK     (0x3)
-    #define VHOST_USER_REPLY_MASK       (0x1<<2)
+#define VHOST_USER_VERSION_MASK     (0x3)
+#define VHOST_USER_REPLY_MASK       (0x1<<2)
     uint32_t flags;
     uint32_t size; /* payload size */
     union {
+#define VHOST_USER_VRING_IDX_MASK   (0xff)
+#define VHOST_USER_VRING_NOFD_MASK  (0x1<<8)
         uint64_t    u64;
         struct vhost_vring_state state;
         struct vhost_vring_addr addr;
