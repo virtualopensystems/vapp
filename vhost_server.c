@@ -22,7 +22,7 @@
 typedef int (*MsgHandler)(VhostServer* vhost_server, ServerMsg* msg);
 
 static int avail_handler_server(void* context, void* buf, size_t size);
-static uint64_t map_handler(void* context, uint64_t addr);
+static uintptr_t map_handler(void* context, uint64_t addr);
 
 extern int app_running;
 
@@ -70,16 +70,17 @@ int end_vhost_server(VhostServer* vhost_server)
 
     for (idx = 0; idx < vhost_server->memory.nregions; idx++) {
         VhostServerMemoryRegion *region = &vhost_server->memory.regions[idx];
-        end_shm(vhost_server->server->path, (void*) region->userspace_addr,
+        end_shm(vhost_server->server->path,
+                (void*) (uintptr_t) region->userspace_addr,
                 region->memory_size, idx);
     }
 
     return 0;
 }
 
-static int64_t _map_guest_addr(VhostServer* vhost_server, uint64_t addr)
+static uintptr_t _map_guest_addr(VhostServer* vhost_server, uint64_t addr)
 {
-    uint64_t result = 0;
+    uintptr_t result = 0;
     int idx;
 
     for (idx = 0; idx < vhost_server->memory.nregions; idx++) {
@@ -95,9 +96,9 @@ static int64_t _map_guest_addr(VhostServer* vhost_server, uint64_t addr)
     return result;
 }
 
-static int64_t _map_user_addr(VhostServer* vhost_server, uint64_t addr)
+static uintptr_t _map_user_addr(VhostServer* vhost_server, uint64_t addr)
 {
-    uint64_t result = 0;
+    uintptr_t result = 0;
     int idx;
 
     for (idx = 0; idx < vhost_server->memory.nregions; idx++) {
@@ -160,7 +161,7 @@ static int _set_mem_table(VhostServer* vhost_server, ServerMsg* msg)
             assert(msg->fds[idx] > 0);
 
             region->mmap_addr =
-                    (uint64_t) init_shm_from_fd(msg->fds[idx], region->memory_size);
+                    (uintptr_t) init_shm_from_fd(msg->fds[idx], region->memory_size);
 
             vhost_server->memory.nregions++;
         }
@@ -262,7 +263,7 @@ static int avail_handler_server(void* context, void* buf, size_t size)
     return 0;
 }
 
-static uint64_t map_handler(void* context, uint64_t addr)
+static uintptr_t map_handler(void* context, uint64_t addr)
 {
     VhostServer* vhost_server = (VhostServer*) context;
     return _map_guest_addr(vhost_server, addr);
@@ -285,7 +286,7 @@ static int _kick_server(FdNode* node)
     } else {
         int idx = VHOST_CLIENT_VRING_IDX_TX;
 #if 0
-        fprintf(stdout, "Got kick %ld\n", kick_it);
+        fprintf(stdout, "Got kick %"PRId64"\n", kick_it);
 #endif
         // if vring is already set, process the vring
         if (vhost_server->vring_table.vring[idx].desc) {

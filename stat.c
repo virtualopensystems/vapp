@@ -8,6 +8,7 @@
  *
  */
 
+#include <inttypes.h>
 #include <stdio.h>
 
 #include "stat.h"
@@ -52,7 +53,7 @@ int print_stat(Stat* stat)
 
     if (diff > stat->diff) {
         if (diff % STAT_PRINT_INTERVAL == 0) {
-            fprintf(stdout,"%10ld\r", stat->count / diff);fflush(stdout);
+            fprintf(stdout,"%10"PRId64"\r", stat->count / diff);fflush(stdout);
         }
         stat->diff = diff;
     }

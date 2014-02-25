@@ -67,10 +67,10 @@ void dump_vhostmsg(const VhostUserMsg* msg)
     // command specific `dumps`
     switch (msg->request) {
     case VHOST_USER_GET_FEATURES:
-        fprintf(stdout, "u64: 0x%lx\n", msg->u64);
+        fprintf(stdout, "u64: 0x%"PRIx64"\n", msg->u64);
         break;
     case VHOST_USER_SET_FEATURES:
-        fprintf(stdout, "u64: 0x%lx\n", msg->u64);
+        fprintf(stdout, "u64: 0x%"PRIx64"\n", msg->u64);
         break;
     case VHOST_USER_SET_OWNER:
         break;
@@ -80,14 +80,14 @@ void dump_vhostmsg(const VhostUserMsg* msg)
         fprintf(stdout, "nregions: %d\n", msg->memory.nregions);
         for (i = 0; i < msg->memory.nregions; i++) {
             fprintf(stdout,
-                    "region: \n\tgpa = 0x%lx\n\tsize = %ld\n\tua = 0x%lx\n",
+                    "region: \n\tgpa = 0x%"PRIX64"\n\tsize = %"PRId64"\n\tua = 0x%"PRIx64"\n",
                     msg->memory.regions[i].guest_phys_addr,
                     msg->memory.regions[i].memory_size,
                     msg->memory.regions[i].userspace_addr);
         }
         break;
     case VHOST_USER_SET_LOG_BASE:
-        fprintf(stdout, "u64: 0x%lx\n", msg->u64);
+        fprintf(stdout, "u64: 0x%"PRIx64"\n", msg->u64);
         break;
     case VHOST_USER_SET_LOG_FD:
         break;
@@ -96,10 +96,10 @@ void dump_vhostmsg(const VhostUserMsg* msg)
         break;
     case VHOST_USER_SET_VRING_ADDR:
         fprintf(stdout, "addr:\n\tidx = %d\n\tflags = 0x%x\n"
-                "\tdua = 0x%lx\n"
-                "\tuua = 0x%lx\n"
-                "\taua = 0x%lx\n"
-                "\tlga = 0x%lx\n", msg->addr.index, msg->addr.flags,
+                "\tdua = 0x%"PRIx64"\n"
+                "\tuua = 0x%"PRIx64"\n"
+                "\taua = 0x%"PRIx64"\n"
+                "\tlga = 0x%"PRIx64"\n", msg->addr.index, msg->addr.flags,
                 msg->addr.desc_user_addr, msg->addr.used_user_addr,
                 msg->addr.avail_user_addr, msg->addr.log_guest_addr);
         break;
@@ -112,7 +112,7 @@ void dump_vhostmsg(const VhostUserMsg* msg)
     case VHOST_USER_SET_VRING_KICK:
     case VHOST_USER_SET_VRING_CALL:
     case VHOST_USER_SET_VRING_ERR:
-        fprintf(stdout, "u64: 0x%lx\n", msg->u64);
+        fprintf(stdout, "u64: 0x%"PRIx64"\n", msg->u64);
         break;
     case VHOST_USER_NONE:
     case VHOST_USER_MAX:
@@ -141,7 +141,7 @@ void dump_vring(struct vring_desc* desc, struct vring_avail* avail,struct vring_
 
     fprintf(stdout,"desc:\n");
     for(idx=0;idx<VHOST_VRING_SIZE;idx++){
-        fprintf(stdout, "%d: 0x%lx %d 0x%x %d\n",
+        fprintf(stdout, "%d: 0x%"PRIx64" %d 0x%x %d\n",
                 idx,
                 desc[idx].addr, desc[idx].len,
                 desc[idx].flags, desc[idx].next);

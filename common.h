@@ -11,6 +11,7 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
+#include <inttypes.h>
 #include <stddef.h>
 #include <stdint.h>
 

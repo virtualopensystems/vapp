@@ -48,9 +48,9 @@ VhostClient* new_vhost_client(const char* path)
             free(vhost_client);
             return 0;
         }
-        vhost_client->memory.regions[idx].guest_phys_addr = (uint64_t) shm;
+        vhost_client->memory.regions[idx].guest_phys_addr = (uintptr_t) shm;
         vhost_client->memory.regions[idx].memory_size = vhost_client->page_size;
-        vhost_client->memory.regions[idx].userspace_addr = (uint64_t) shm;
+        vhost_client->memory.regions[idx].userspace_addr = (uintptr_t) shm;
     }
 
     // init vrings on the shm (through memory regions)
@@ -116,9 +116,8 @@ int end_vhost_client(VhostClient* vhost_client)
     for (i = 0; i<vhost_client->memory.nregions; i++)
     {
         end_shm(vhost_client->client->sock_path,
-                (void*)vhost_client->memory.regions[i].guest_phys_addr,
-                vhost_client->memory.regions[i].memory_size,
-                i);
+                (void*) (uintptr_t) vhost_client->memory.regions[i].guest_phys_addr,
+                vhost_client->memory.regions[i].memory_size, i);
     }
 
     end_client(vhost_client->client);

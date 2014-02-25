@@ -60,7 +60,7 @@ struct vhost_vring {
 };
 
 typedef int (*AvailHandler)(void* context, void* buf, size_t size);
-typedef uint64_t (*MapHandler)(void* context, uint64_t addr);
+typedef uintptr_t (*MapHandler)(void* context, uint64_t addr);
 
 typedef struct {
     void* context;

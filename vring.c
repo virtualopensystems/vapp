@@ -68,7 +68,8 @@ int vring_table_from_memory_region(struct vhost_vring* vring_table[], size_t vri
     assert(vring_table_num == memory->nregions);
 
     for (i = 0; i < vring_table_num; i++) {
-        struct vhost_vring* vring = new_vring((void*)memory->regions[i].guest_phys_addr);
+        struct vhost_vring* vring = new_vring(
+                (void*) (uintptr_t) memory->regions[i].guest_phys_addr);
         if (!vring) {
             fprintf(stderr, "Unable to create vring %d.\n", i);
             return -1;
@@ -91,10 +92,10 @@ int set_host_vring(Client* client, struct vhost_vring *vring, int index)
     struct vhost_vring_file kick = { .index = index, .fd = vring->kickfd };
     struct vhost_vring_file call = { .index = index, .fd = vring->callfd };
     struct vhost_vring_addr addr = { .index = index,
-            .desc_user_addr = (uint64_t) &vring->desc,
-            .avail_user_addr = (uint64_t) &vring->avail,
-            .used_user_addr = (uint64_t) &vring->used,
-            .log_guest_addr = (uint64_t) NULL,
+            .desc_user_addr = (uintptr_t) &vring->desc,
+            .avail_user_addr = (uintptr_t) &vring->avail,
+            .used_user_addr = (uintptr_t) &vring->used,
+            .log_guest_addr = (uintptr_t) NULL,
             .flags = 0 };
 
     if (vhost_ioctl(client, VHOST_USER_SET_VRING_NUM, &num) != 0)
@@ -148,7 +149,7 @@ int put_vring(VringTable* vring_table, uint32_t v_idx, void* buf, size_t size)
     if (handler && handler->map_handler) {
         dest_buf = (void*)handler->map_handler(handler->context, desc[a_idx].addr);
     } else {
-        dest_buf = (void*)desc[a_idx].addr;
+        dest_buf = (void*) (uintptr_t) desc[a_idx].addr;
     }
 
     // set the header to all 0
@@ -235,7 +236,7 @@ static int process_desc(VringTable* vring_table, uint32_t v_idx, uint32_t a_idx)
         if (handler && handler->map_handler) {
             cur = (void*)handler->map_handler(handler->context, desc[i].addr);
         } else {
-            cur = (void*)desc[i].addr;
+            cur = (void*) (uintptr_t) desc[i].addr;
         }
 
         if (len + cur_len < buf_size) {
