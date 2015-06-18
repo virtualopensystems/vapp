@@ -51,6 +51,10 @@ const char* cmd_from_vhostmsg(const VhostUserMsg* msg)
         return "VHOST_USER_SET_VRING_CALL";
     case VHOST_USER_SET_VRING_ERR:
         return "VHOST_USER_SET_VRING_ERR";
+    case VHOST_USER_NET_SET_BACKEND:
+        return "VHOST_USER_NET_SET_BACKEND";
+    case VHOST_USER_ECHO:
+        return "VHOST_USER_ECHO";
     case VHOST_USER_MAX:
         return "VHOST_USER_MAX";
     }
@@ -115,6 +119,8 @@ void dump_vhostmsg(const VhostUserMsg* msg)
         fprintf(stdout, "u64: 0x%"PRIx64"\n", msg->u64);
         break;
     case VHOST_USER_NONE:
+    case VHOST_USER_NET_SET_BACKEND:
+    case VHOST_USER_ECHO:
     case VHOST_USER_MAX:
         break;
     }

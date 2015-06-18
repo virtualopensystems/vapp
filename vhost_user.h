@@ -43,6 +43,8 @@ typedef enum VhostUserRequest {
     VHOST_USER_SET_VRING_KICK = 12,
     VHOST_USER_SET_VRING_CALL = 13,
     VHOST_USER_SET_VRING_ERR = 14,
+    VHOST_USER_NET_SET_BACKEND = 15,
+    VHOST_USER_ECHO = 16,
     VHOST_USER_MAX
 } VhostUserRequest;
 

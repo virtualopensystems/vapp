@@ -367,6 +367,18 @@ static int _set_vring_err(VhostServer* vhost_server, ServerMsg* msg)
     return 0;
 }
 
+static int _net_set_backend(VhostServer* vhost_server, ServerMsg* msg)
+{
+    fprintf(stdout, "%s\n", __FUNCTION__);
+    return 0;
+}
+
+static int _echo(VhostServer* vhost_server, ServerMsg* msg)
+{
+    fprintf(stdout, "%s\n", __FUNCTION__);
+    return 1; // should reply back
+}
+
 static MsgHandler msg_handlers[VHOST_USER_MAX] = {
         0,                  // VHOST_USER_NONE
         _get_features,      // VHOST_USER_GET_FEATURES
@@ -383,6 +395,8 @@ static MsgHandler msg_handlers[VHOST_USER_MAX] = {
         _set_vring_kick,    // VHOST_USER_SET_VRING_KICK
         _set_vring_call,    // VHOST_USER_SET_VRING_CALL
         _set_vring_err,     // VHOST_USER_SET_VRING_ERR
+        _net_set_backend,   // VHOST_USER_NET_SET_BACKEND
+        _echo,              // VHOST_USER_ECHO
         };
 
 static int in_msg_server(void* context, ServerMsg* msg)
