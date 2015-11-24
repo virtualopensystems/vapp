@@ -51,6 +51,7 @@ VhostClient* new_vhost_client(const char* path)
         vhost_client->memory.regions[idx].guest_phys_addr = (uintptr_t) shm;
         vhost_client->memory.regions[idx].memory_size = vhost_client->page_size;
         vhost_client->memory.regions[idx].userspace_addr = (uintptr_t) shm;
+        vhost_client->memory.regions[idx].mmap_offset = 0;
     }
 
     // init vrings on the shm (through memory regions)

@@ -164,6 +164,7 @@ static int _set_mem_table(VhostServer* vhost_server, ServerMsg* msg)
 
             region->mmap_addr =
                     (uintptr_t) init_shm_from_fd(msg->fds[idx], region->memory_size);
+            region->mmap_addr += msg->msg.memory.regions[idx].mmap_offset;
 
             vhost_server->memory.nregions++;
         }
