@@ -107,18 +107,20 @@ static int fd_set_from_fd_list(FdList* fd_list, FdType type, fd_set* fdset)
 static int process_fd_set(FdList* fd_list, FdType type, fd_set* fdset)
 {
     int idx;
+    int num_of_fds = 0;
     FdNode* fds = (type == FD_READ) ? fd_list->read_fds : fd_list->write_fds;
 
     for (idx = 0; idx < FD_LIST_SIZE; idx++) {
         FdNode* node = &(fds[idx]);
         if (FD_ISSET(node->fd,fdset)) {
+            num_of_fds++;
             if (node->handler) {
                 node->handler(node);
             }
         }
     }
 
-    return 0;
+    return num_of_fds;
 }
 
 int traverse_fd_list(FdList* fd_list)
